@@ -62,6 +62,13 @@ export default function SignUpPage() {
     }
 
     try {
+      console.log("[v0] Starting signup process with data:", {
+        email: formData.email,
+        role: formData.role,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+      })
+
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -76,17 +83,21 @@ export default function SignUpPage() {
         },
       })
 
+      console.log("[v0] Signup response:", { data, error })
+
       if (error) {
-        setError(error.message)
+        setError(`Something went wrong: ${error.message} (Code: ${error.code || "unknown"})`)
         return
       }
 
       if (data.user) {
+        console.log("[v0] User created successfully:", data.user.id)
         // Show success message for email confirmation
         setError("")
         router.push("/auth/verify-email")
       }
     } catch (err) {
+      console.log("[v0] Signup catch error:", err)
       setError("Failed to create account. Please try again.")
     } finally {
       setIsLoading(false)

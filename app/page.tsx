@@ -1,10 +1,18 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Compass, Globe, GraduationCap, Users, BookOpen, Award, ArrowRight, Star } from "lucide-react"
 import Link from "next/link"
+import { useStats } from "@/hooks/use-stats"
+import { useFeaturedCourses } from "@/hooks/use-featured-courses"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function HomePage() {
+  const { stats, loading: statsLoading } = useStats()
+  const { courses, loading: coursesLoading } = useFeaturedCourses()
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -80,19 +88,35 @@ export default function HomePage() {
         <div className="container mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div>
-              <div className="text-3xl font-bold text-primary mb-2">10,000+</div>
+              {statsLoading ? (
+                <Skeleton className="h-8 w-20 mx-auto mb-2" />
+              ) : (
+                <div className="text-3xl font-bold text-primary mb-2">{stats.totalLearners.toLocaleString()}+</div>
+              )}
               <div className="text-sm text-muted-foreground">Active Learners</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-primary mb-2">500+</div>
+              {statsLoading ? (
+                <Skeleton className="h-8 w-16 mx-auto mb-2" />
+              ) : (
+                <div className="text-3xl font-bold text-primary mb-2">{stats.totalInstructors.toLocaleString()}+</div>
+              )}
               <div className="text-sm text-muted-foreground">Expert Instructors</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-primary mb-2">1,200+</div>
+              {statsLoading ? (
+                <Skeleton className="h-8 w-20 mx-auto mb-2" />
+              ) : (
+                <div className="text-3xl font-bold text-primary mb-2">{stats.totalCourses.toLocaleString()}+</div>
+              )}
               <div className="text-sm text-muted-foreground">Courses Available</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-primary mb-2">95%</div>
+              {statsLoading ? (
+                <Skeleton className="h-8 w-12 mx-auto mb-2" />
+              ) : (
+                <div className="text-3xl font-bold text-primary mb-2">{stats.completionRate}%</div>
+              )}
               <div className="text-sm text-muted-foreground">Completion Rate</div>
             </div>
           </div>
@@ -109,62 +133,73 @@ export default function HomePage() {
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                title: "Introduction to AI Basics for Africa",
-                description: "Learn fundamental AI concepts with real-world African applications and case studies.",
-                level: "Beginner",
-                duration: "6 weeks",
-                price: "Free",
-                rating: 4.9,
-                students: 2340,
-              },
-              {
-                title: "Web Development Fundamentals",
-                description: "Master HTML, CSS, and JavaScript to build modern, responsive websites.",
-                level: "Beginner",
-                duration: "8 weeks",
-                price: "$49",
-                rating: 4.8,
-                students: 1890,
-              },
-              {
-                title: "Data Science with Python",
-                description: "Analyze data and build predictive models using Python and popular libraries.",
-                level: "Intermediate",
-                duration: "12 weeks",
-                price: "$99",
-                rating: 4.9,
-                students: 1560,
-              },
-            ].map((course, index) => (
-              <Card key={index} className="hover:shadow-lg transition-shadow">
-                <div className="aspect-video bg-gradient-to-br from-primary/10 to-accent/10 rounded-t-lg flex items-center justify-center">
-                  <GraduationCap className="w-12 h-12 text-primary" />
-                </div>
-                <CardHeader>
-                  <div className="flex items-center justify-between mb-2">
-                    <Badge variant="secondary">{course.level}</Badge>
-                    <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4 fill-accent text-accent" />
-                      <span className="text-sm font-medium">{course.rating}</span>
+            {coursesLoading
+              ? Array.from({ length: 3 }).map((_, index) => (
+                  <Card key={index} className="hover:shadow-lg transition-shadow">
+                    <Skeleton className="aspect-video rounded-t-lg" />
+                    <CardHeader>
+                      <div className="flex items-center justify-between mb-2">
+                        <Skeleton className="h-5 w-20" />
+                        <Skeleton className="h-5 w-16" />
+                      </div>
+                      <Skeleton className="h-6 w-full mb-2" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between text-sm mb-4">
+                        <Skeleton className="h-4 w-16" />
+                        <Skeleton className="h-4 w-20" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Skeleton className="h-6 w-12" />
+                        <Skeleton className="h-8 w-20" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              : courses.map((course) => (
+                  <Card key={course.id} className="hover:shadow-lg transition-shadow">
+                    <div className="aspect-video bg-gradient-to-br from-primary/10 to-accent/10 rounded-t-lg flex items-center justify-center overflow-hidden">
+                      {course.thumbnail_url ? (
+                        <img
+                          src={course.thumbnail_url || "/placeholder.svg"}
+                          alt={course.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <GraduationCap className="w-12 h-12 text-primary" />
+                      )}
                     </div>
-                  </div>
-                  <CardTitle className="text-lg">{course.title}</CardTitle>
-                  <CardDescription>{course.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-                    <span>{course.duration}</span>
-                    <span>{course.students.toLocaleString()} students</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-bold text-primary">{course.price}</span>
-                    <Button size="sm">Enroll Now</Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    <CardHeader>
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge variant="secondary" className="capitalize">
+                          {course.level}
+                        </Badge>
+                        <div className="flex items-center gap-1">
+                          <Star className="w-4 h-4 fill-accent text-accent" />
+                          <span className="text-sm font-medium">{course.avg_rating.toFixed(1)}</span>
+                        </div>
+                      </div>
+                      <CardTitle className="text-lg">{course.title}</CardTitle>
+                      <CardDescription>{course.short_description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+                        <span>{Math.ceil(course.duration_hours / 7)} weeks</span>
+                        <span>{course._count.enrollments.toLocaleString()} students</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-lg font-bold text-primary">
+                          {course.price === 0 ? "Free" : `$${course.price}`}
+                        </span>
+                        <Button size="sm" asChild>
+                          <Link href={`/courses/${course.id}`}>Enroll Now</Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
           </div>
         </div>
       </section>
