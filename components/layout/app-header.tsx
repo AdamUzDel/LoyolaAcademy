@@ -143,12 +143,12 @@ export function AppHeader() {
             ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <div className="relative h-10 w-10 rounded-full">
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={user.avatar_url || "/placeholder.svg"} alt={getUserDisplayName()} />
                       <AvatarFallback>{getUserInitials()}</AvatarFallback>
                     </Avatar>
-                  </Button>
+                  </div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">

@@ -152,7 +152,7 @@ export default function CoursesPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      {/* <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-3">
@@ -185,7 +185,7 @@ export default function CoursesPage() {
             </div>
           </div>
         </div>
-      </header>
+      </header> */}
 
       <div className="container mx-auto px-4 py-8">
         {/* Hero Section */}
@@ -258,7 +258,7 @@ export default function CoursesPage() {
           <TabsContent value="all" className="space-y-6">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredCourses.map((course) => (
-                <Card key={course.id} className="hover:shadow-lg transition-shadow group">
+                <Card key={course.id} className="hover:shadow-lg transition-shadow group pt-0">
                   <div className="relative">
                     <img
                       src={course.thumbnail || "/placeholder.svg"}

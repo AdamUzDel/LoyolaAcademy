@@ -127,7 +127,7 @@ export default function SignUpPage() {
   const roleOptions = [
     { value: "learner", label: "Learner", icon: GraduationCap, description: "I want to take courses" },
     { value: "teacher", label: "Teacher", icon: Users, description: "I want to create and teach courses" },
-    { value: "admin", label: "Admin", icon: Shield, description: "I manage the platform" },
+    /* { value: "admin", label: "Admin", icon: Shield, description: "I manage the platform" }, */
   ]
 
   return (

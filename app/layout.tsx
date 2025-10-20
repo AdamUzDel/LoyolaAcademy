@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { Playfair_Display } from "next/font/google"
-import { Analytics } from "@vercel/analytics/next"
+//import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
 import "./globals.css"
 import { AppHeader } from "@/components/layout/app-header"
@@ -34,7 +34,7 @@ export default function RootLayout({
           <main className="min-h-screen">{children}</main>
           <AppFooter />
         </Suspense>
-        <Analytics />
+        {/* <Analytics /> */}
       </body>
     </html>
   )

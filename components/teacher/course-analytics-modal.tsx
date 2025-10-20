@@ -5,12 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Users, DollarSign, Star, TrendingUp, Clock, Target } from "lucide-react"
-import type { Course, CourseAnalytics } from "@/lib/hooks/use-teacher-data"
+import type { Course, CourseAnalytics } from "@/hooks/use-teacher-data"
 
 interface CourseAnalyticsModalProps {
   isOpen: boolean
   onClose: () => void
-  course: Course
+  // course may be null when the dialog is closed or opened without selection
+  course?: Course | null
   analytics?: CourseAnalytics
 }
 
@@ -20,7 +21,7 @@ export function CourseAnalyticsModal({ isOpen, onClose, course, analytics }: Cou
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-4xl">
           <DialogHeader>
-            <DialogTitle>Course Analytics - {course.title}</DialogTitle>
+            <DialogTitle>Course Analytics - {course?.title ?? "(no course selected)"}</DialogTitle>
           </DialogHeader>
           <div className="text-center py-8">
             <p className="text-muted-foreground">No analytics data available for this course yet.</p>
@@ -38,7 +39,7 @@ export function CourseAnalyticsModal({ isOpen, onClose, course, analytics }: Cou
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Course Analytics - {course.title}</DialogTitle>
+          <DialogTitle>Course Analytics - {course?.title ?? "(no course selected)"}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">

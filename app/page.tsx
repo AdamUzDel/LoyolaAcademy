@@ -123,7 +123,7 @@ export default function HomePage() {
                   </Card>
                 ))
               : courses.map((course) => (
-                  <Card key={course.id} className="hover:shadow-lg transition-shadow">
+                  <Card key={course.id} className="hover:shadow-lg transition-shadow pt-0">
                     <div className="aspect-video bg-gradient-to-br from-primary/10 to-accent/10 rounded-t-lg flex items-center justify-center overflow-hidden">
                       {course.thumbnail_url ? (
                         <img

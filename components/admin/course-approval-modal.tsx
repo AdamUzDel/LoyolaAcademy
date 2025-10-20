@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CheckCircle, XCircle, Eye, User, Calendar, DollarSign, BookOpen, Star } from "lucide-react"
-import type { CourseApproval } from "@/lib/hooks/use-admin-data"
+import type { CourseApproval } from "@/hooks/use-admin-data"
 
 interface CourseApprovalModalProps {
   isOpen: boolean

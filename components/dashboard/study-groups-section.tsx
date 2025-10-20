@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Users, Calendar, Plus, MessageCircle, Video } from "lucide-react"
-import type { StudyGroup } from "@/lib/hooks/use-learner-data"
+import type { StudyGroup } from "@/hooks/use-learner-data"
 
 interface StudyGroupsSectionProps {
   studyGroups: StudyGroup[]

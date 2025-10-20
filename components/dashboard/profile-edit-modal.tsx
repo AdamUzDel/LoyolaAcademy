@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Camera } from "lucide-react"
-import type { LearnerProfile } from "@/lib/hooks/use-learner-data"
+import type { LearnerProfile } from "@/hooks/use-learner-data"
 
 interface ProfileEditModalProps {
   isOpen: boolean

@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Upload, X, Plus } from "lucide-react"
-import type { Course } from "@/lib/hooks/use-teacher-data"
+import type { Course } from "@/hooks/use-teacher-data"
 
 interface CourseCreationModalProps {
   isOpen: boolean

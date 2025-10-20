@@ -56,7 +56,7 @@ export function useFeaturedCourses() {
               name
             ),
             enrollments (count),
-            reviews (rating)
+            course_ratings (rating)
           `)
           .eq("status", "published")
           .eq("is_featured", true)
@@ -68,12 +68,14 @@ export function useFeaturedCourses() {
         const processedCourses =
           data?.map((course) => ({
             ...course,
+            instructor: Array.isArray(course.instructor) ? course.instructor[0] : course.instructor,
+            category: Array.isArray(course.category) ? course.category[0] : course.category,
             _count: {
               enrollments: course.enrollments?.length || 0,
             },
             avg_rating:
-              course.reviews?.length > 0
-                ? course.reviews.reduce((sum: number, review: any) => sum + review.rating, 0) / course.reviews.length
+              course.course_ratings?.length > 0
+                ? course.course_ratings.reduce((sum: number, ratingObj: any) => sum + ratingObj.rating, 0) / course.course_ratings.length
                 : 4.8,
           })) || []
 

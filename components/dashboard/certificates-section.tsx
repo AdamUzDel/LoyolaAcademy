@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Award, Download, Share2, Eye } from "lucide-react"
-import type { Certificate } from "@/lib/hooks/use-learner-data"
+import type { Certificate } from "@/hooks/use-learner-data"
 
 interface CertificatesSectionProps {
   certificates: Certificate[]

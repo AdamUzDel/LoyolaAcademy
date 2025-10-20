@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { User, Mail, Calendar, BookOpen, DollarSign, Shield, Clock } from "lucide-react"
-import type { PlatformUser } from "@/lib/hooks/use-admin-data"
+import type { PlatformUser } from "@/hooks/use-admin-data"
 
 interface UserManagementModalProps {
   isOpen: boolean
@@ -235,7 +235,7 @@ export function UserManagementModal({ isOpen, onClose, user, onUpdateStatus }: U
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="action">Select Action</Label>
-                  <Select value={selectedAction} onValueChange={setSelectedAction}>
+                  <Select value={selectedAction} onValueChange={(value) => setSelectedAction(value as PlatformUser["status"] | "")}>
                     <SelectTrigger>
                       <SelectValue placeholder="Choose an action" />
                     </SelectTrigger>

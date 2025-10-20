@@ -84,3 +84,16 @@ export interface CourseModule {
   duration_minutes: number
   created_at: string
 }
+
+const categories = [
+  "Artificial Intelligence",
+  "Web Development",
+  "Data Science",
+  "Business",
+  "Cybersecurity",
+  "Mobile Development",
+  "Digital Marketing",
+  "Blockchain",
+  "Cloud Computing",
+  "UI/UX Design",
+]

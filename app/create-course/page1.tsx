@@ -19,15 +19,13 @@ import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 
 export default function CreateCoursePage() {
-  // ...existing code...
   const [courseData, setCourseData] = useState({
     title: "",
     description: "",
     category: "",
     level: "",
     price: 0,
-    // changed: store numeric hours for course duration
-    durationHours: 0,
+    duration: "",
     language: "English",
     tags: [] as string[],
     requirements: [""],
@@ -35,7 +33,6 @@ export default function CreateCoursePage() {
     thumbnail: null as File | null,
   })
 
-  // changed: lessons use numeric durationMinutes
   const [modules, setModules] = useState([
     {
       id: 1,
@@ -46,7 +43,7 @@ export default function CreateCoursePage() {
           id: 1,
           title: "",
           type: "video",
-          durationMinutes: 0,
+          duration: "",
           content: "",
           free: false,
         },
@@ -59,9 +56,6 @@ export default function CreateCoursePage() {
   const router = useRouter()
 
   const [categories, setCategories] = useState<string[]>([])
-  const [isSaving, setIsSaving] = useState(false)
-  const [isPublishing, setIsPublishing] = useState(false)
-  const [validationErrors, setValidationErrors] = useState<string[]>([])
 
   const levels = ["beginner", "intermediate", "advanced"]
   const lessonTypes = [
@@ -133,7 +127,7 @@ export default function CreateCoursePage() {
           id: 1,
           title: "",
           type: "video",
-          durationMinutes: 0,
+          duration: "",
           content: "",
           free: false,
         },
@@ -158,7 +152,7 @@ export default function CreateCoursePage() {
                   id: module.lessons.length + 1,
                   title: "",
                   type: "video",
-                  durationMinutes: 0,
+                  duration: "",
                   content: "",
                   free: false,
                 },
@@ -197,160 +191,81 @@ export default function CreateCoursePage() {
     )
   }
 
-  // validation helper for publishing
-  const validateForPublish = () => {
-    const errors: string[] = []
-    let firstFailingTab: "basic" | "curriculum" | "pricing" = "basic"
-
-    // Basic info checks
-    if (!courseData.title?.trim()) {
-      errors.push("Course title is required.")
-    }
-    if (!courseData.description?.trim()) {
-      errors.push("Course description is required.")
-    }
-    if (!courseData.category) {
-      errors.push("Course category must be selected.")
-    }
-    if (!courseData.level) {
-      errors.push("Course level must be selected.")
-    }
-    if (courseData.durationHours !== undefined && courseData.durationHours < 0) {
-      errors.push("Course duration (hours) must be 0 or a positive number.")
-    }
-
-    if (errors.length) firstFailingTab = "basic"
-
-    // Curriculum checks
-    const curriculumErrors: string[] = []
-    if (!modules || modules.length === 0) {
-      curriculumErrors.push("At least one module is required.")
-    } else {
-      modules.forEach((m, mi) => {
-        if (!m.title || !m.title.trim()) {
-          curriculumErrors.push(`Module ${mi + 1} title is required.`)
+  const handleSaveDraft = () => {
+    ;(async () => {
+      try {
+        const supabase = createClient()
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        if (!user) {
+          console.warn("No authenticated user")
+          return
         }
-        if (!m.lessons || m.lessons.length === 0) {
-          curriculumErrors.push(`Module ${mi + 1} must have at least one lesson.`)
-        } else {
-          m.lessons.forEach((l, li) => {
-            if (!l.title || !l.title.trim()) {
-              curriculumErrors.push(`Module ${mi + 1}, Lesson ${li + 1} title is required.`)
-            }
-            // require positive numeric lesson duration in minutes
-            if (typeof l.durationMinutes !== "number" || l.durationMinutes <= 0) {
-              curriculumErrors.push(`Module ${mi + 1}, Lesson ${li + 1} duration must be > 0 minutes.`)
-            }
-          })
-        }
-      })
-    }
 
-    if (curriculumErrors.length) {
-      if (!errors.length) firstFailingTab = "curriculum"
-      errors.push(...curriculumErrors)
-    }
+        const totalLessons = modules.reduce((sum, m) => sum + (m.lessons?.length || 0), 0)
 
-    // Pricing check (simple)
-    if (courseData.price < 0) {
-      if (!errors.length) firstFailingTab = "pricing"
-      errors.push("Price cannot be negative.")
-    }
+        const result = await dbService.createCourse(user.id, {
+          title: courseData.title,
+          description: courseData.description,
+          category: courseData.category,
+          level: courseData.level,
+          price: courseData.price,
+          thumbnail: courseData.thumbnail,
+          status: "draft",
+          totalLessons,
+          tags: courseData.tags,
+          requirements: courseData.requirements,
+          whatYouLearn: courseData.learningOutcomes,
+          language: courseData.language,
+          durationHours: Number(courseData.duration) || undefined,
+        })
 
-    return { errors, firstFailingTab }
+        console.log("Saved draft result:", result)
+      } catch (err) {
+        console.error("Failed to save draft:", err)
+      }
+    })()
   }
 
-  const handleSaveDraft = async () => {
-    if (isSaving) return
-    setIsSaving(true)
-    try {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) {
-        console.warn("No authenticated user")
-        setIsSaving(false)
-        return
+  const handlePublish = () => {
+    ;(async () => {
+      try {
+        const supabase = createClient()
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        if (!user) {
+          console.warn("No authenticated user")
+          return
+        }
+
+        const totalLessons = modules.reduce((sum, m) => sum + (m.lessons?.length || 0), 0)
+
+        const course = await dbService.createCourse(user.id, {
+          title: courseData.title,
+          description: courseData.description,
+          category: courseData.category,
+          level: courseData.level,
+          price: courseData.price,
+          thumbnail: courseData.thumbnail,
+          status: "published",
+          totalLessons,
+          tags: courseData.tags,
+          requirements: courseData.requirements,
+          whatYouLearn: courseData.learningOutcomes,
+          language: courseData.language,
+          durationHours: Number(courseData.duration) || undefined,
+        })
+
+        console.log("Published course:", course)
+        if (course) {
+          router.push(`/dashboard/teacher`)
+        }
+      } catch (err) {
+        console.error("Failed to publish course:", err)
       }
-
-      const totalLessons = modules.reduce((sum, m) => sum + (m.lessons?.length || 0), 0)
-
-      const result = await dbService.createCourse(user.id, {
-        title: courseData.title,
-        description: courseData.description,
-        category: courseData.category,
-        level: courseData.level,
-        price: courseData.price,
-        thumbnail: courseData.thumbnail,
-        status: "draft",
-        totalLessons,
-        tags: courseData.tags,
-        requirements: courseData.requirements,
-        whatYouLearn: courseData.learningOutcomes,
-        language: courseData.language,
-        durationHours: Number(courseData.durationHours) || undefined,
-      })
-
-      console.log("Saved draft result:", result)
-    } catch (err) {
-      console.error("Failed to save draft:", err)
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  const handlePublish = async () => {
-    if (isPublishing) return
-    setValidationErrors([])
-    const { errors, firstFailingTab } = validateForPublish()
-    if (errors.length) {
-      setValidationErrors(errors)
-      setActiveTab(firstFailingTab)
-      return
-    }
-
-    setIsPublishing(true)
-    try {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) {
-        console.warn("No authenticated user")
-        setValidationErrors(["You must be signed in to publish a course."])
-        setIsPublishing(false)
-        return
-      }
-
-      const totalLessons = modules.reduce((sum, m) => sum + (m.lessons?.length || 0), 0)
-
-      const course = await dbService.createCourse(user.id, {
-        title: courseData.title,
-        description: courseData.description,
-        category: courseData.category,
-        level: courseData.level,
-        price: courseData.price,
-        thumbnail: courseData.thumbnail,
-        status: "published",
-        totalLessons,
-        tags: courseData.tags,
-        requirements: courseData.requirements,
-        whatYouLearn: courseData.learningOutcomes,
-        language: courseData.language,
-        durationHours: Number(courseData.durationHours) || undefined,
-      })
-
-      console.log("Published course:", course)
-      if (course) {
-        router.push(`/dashboard/teacher`)
-      }
-    } catch (err) {
-      console.error("Failed to publish course:", err)
-      setValidationErrors(["Failed to publish course. Please try again."])
-    } finally {
-      setIsPublishing(false)
-    }
+    })()
   }
 
   // Load categories from DB on mount
@@ -455,14 +370,12 @@ export default function CreateCoursePage() {
 
                     <div className="grid md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="duration">Duration (hours)</Label>
+                        <Label htmlFor="duration">Duration</Label>
                         <Input
                           id="duration"
-                          type="number"
-                          min="0"
-                          placeholder="e.g., 6"
-                          value={courseData.durationHours}
-                          onChange={(e) => handleInputChange("durationHours", Number(e.target.value) || 0)}
+                          placeholder="e.g., 6 weeks"
+                          value={courseData.duration}
+                          onChange={(e) => handleInputChange("duration", e.target.value)}
                         />
                       </div>
 
@@ -676,14 +589,12 @@ export default function CreateCoursePage() {
 
                                 <div className="grid md:grid-cols-2 gap-4">
                                   <div className="space-y-2">
-                                    <Label>Duration (minutes)</Label>
+                                    <Label>Duration</Label>
                                     <Input
-                                      placeholder="e.g., 15"
-                                      type="number"
-                                      min="0"
-                                      value={(lesson as any).durationMinutes}
+                                      placeholder="e.g., 15 min"
+                                      value={lesson.duration}
                                       onChange={(e) =>
-                                        updateLesson(moduleIndex, lessonIndex, "durationMinutes", Number(e.target.value) || 0)
+                                        updateLesson(moduleIndex, lessonIndex, "duration", e.target.value)
                                       }
                                     />
                                   </div>
@@ -782,14 +693,6 @@ export default function CreateCoursePage() {
                     <CardDescription>Review your course details before publishing</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {validationErrors.length > 0 && (
-                      <div className="p-3 rounded bg-destructive/10 border border-destructive/20 text-sm text-destructive space-y-1">
-                        {validationErrors.slice(0, 10).map((err, i) => (
-                          <div key={i}>• {err}</div>
-                        ))}
-                      </div>
-                    )}
-
                     <div className="space-y-4">
                       <div className="flex items-center justify-between p-4 border rounded-lg">
                         <div>
@@ -840,17 +743,12 @@ export default function CreateCoursePage() {
                     </div>
 
                     <div className="flex gap-4">
-                      <Button
-                        variant="outline"
-                        onClick={handleSaveDraft}
-                        className="flex-1 bg-transparent"
-                        disabled={isSaving || isPublishing}
-                      >
+                      <Button variant="outline" onClick={handleSaveDraft} className="flex-1 bg-transparent">
                         <Save className="w-4 h-4 mr-2" />
-                        {isSaving ? "Saving..." : "Save as Draft"}
+                        Save as Draft
                       </Button>
-                      <Button onClick={handlePublish} className="flex-1" disabled={isPublishing || isSaving}>
-                        {isPublishing ? "Submitting..." : "Submit for Review"}
+                      <Button onClick={handlePublish} className="flex-1">
+                        Submit for Review
                       </Button>
                     </div>
                   </CardContent>

@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, Target, Calendar, Trash2, Edit } from "lucide-react"
-import type { StudyGoal } from "@/lib/hooks/use-learner-data"
+import type { StudyGoal } from "@/hooks/use-learner-data"
 
 interface StudyGoalsSectionProps {
   goals: StudyGoal[]

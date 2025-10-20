@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { dbService } from "@/lib/database/supabase-service"
 import { createClient } from "@/lib/supabase/client"
+import {CourseLevel} from "@/lib/types/database"
 
 export interface TeacherProfile {
   id: string
@@ -23,8 +24,8 @@ export interface Course {
   id: string
   title: string
   description: string
-  category: string
-  level: "Beginner" | "Intermediate" | "Advanced"
+  category: string | undefined
+  level: CourseLevel
   price: number
   thumbnail?: string
   status: "draft" | "published" | "archived"

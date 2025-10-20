@@ -11,6 +11,23 @@ import type {
   SystemAlert,
 } from "@/hooks/use-admin-data"
 
+// Small utility type for course creation payloads used by the client service
+type CourseInsert = {
+  title: string
+  description?: string
+  category?: string
+  level?: string
+  price?: number
+  thumbnail?: File | string | null
+  status?: string
+  totalLessons?: number
+  tags?: string[]
+  requirements?: string[]
+  whatYouLearn?: string[]
+  language?: string
+  durationHours?: number
+}
+
 // Client-side database service
 export class SupabaseService {
   private supabase = createClient()
@@ -78,17 +95,25 @@ export class SupabaseService {
 
     if (error || !data) return []
 
-    return data.map((enrollment) => ({
-      id: enrollment.course_id,
-      title: enrollment.courses.title,
-      instructor: `${enrollment.courses.profiles.first_name} ${enrollment.courses.profiles.last_name}`,
-      progress: enrollment.progress || 0,
-      totalLessons: enrollment.courses.total_lessons || 0,
-      completedLessons: Math.floor(((enrollment.progress || 0) * (enrollment.courses.total_lessons || 0)) / 100),
-      thumbnail: enrollment.courses.thumbnail_url || "/online-learning-platform.png",
-      category: enrollment.courses.categories?.name || "General",
-      nextDeadline: undefined, // TODO: Implement deadlines
-    }))
+    return data.map((enrollment) => {
+      const course = Array.isArray(enrollment.courses) ? enrollment.courses[0] : enrollment.courses
+      const instructorProfileRaw = course?.profiles as any
+      const instructorProfile = Array.isArray(instructorProfileRaw) ? instructorProfileRaw[0] : instructorProfileRaw
+      const category = course?.categories as { name?: string } | Array<{ name?: string }> | undefined
+      const categoryName = Array.isArray(category) ? category[0]?.name : category?.name
+
+      return {
+        id: enrollment.course_id,
+        title: course?.title || "Untitled",
+        instructor: `${instructorProfile?.first_name || ""} ${instructorProfile?.last_name || ""}`.trim(),
+        progress: enrollment.progress || 0,
+        totalLessons: course?.total_lessons || 0,
+        completedLessons: Math.floor(((enrollment.progress || 0) * (course?.total_lessons || 0)) / 100),
+        thumbnail: course?.thumbnail_url || "/online-learning-platform.png",
+        category: categoryName || "General",
+        nextDeadline: undefined, // TODO: Implement deadlines
+      }
+    })
   }
 
   async getCertificates(userId: string): Promise<Certificate[]> {
@@ -314,21 +339,58 @@ export class SupabaseService {
       tags: course.tags || [],
     }))
   }
-
   // Course CRUD operations
-  async createCourse(
-    userId: string,
-    courseData: Omit<
-      Course,
-      "id" | "students" | "rating" | "earnings" | "completionRate" | "createdAt" | "lastUpdated"
-    >,
-  ): Promise<Course | null> {
-    // Get category ID
-    const { data: category } = await this.supabase
-      .from("categories")
-      .select("id")
-      .eq("name", courseData.category)
-      .single()
+
+  // Return list of categories (id + name)
+  async getCategories(): Promise<Array<{ id: string; name: string }>> {
+
+    const { data, error } = await this.supabase.from("categories").select(`id, name`).order("name")
+
+    if (error) {
+      console.warn("getCategories() - supabase error:", error)
+      return []
+    }
+
+    if (!data) {
+      console.warn("getCategories() - no data returned from categories select")
+      return []
+    }
+
+    console.log("getCategories() - rows:", data.length)
+    return data.map((c: any) => ({ id: c.id, name: c.name }))
+  }
+
+  async createCourse(userId: string, courseData: CourseInsert): Promise<Course | null> {
+    // Resolve category name -> id if provided
+    let categoryId: string | null = null
+    if (courseData.category) {
+      const { data: category } = await this.supabase
+        .from("categories")
+        .select("id")
+        .eq("name", courseData.category)
+        .single()
+      categoryId = category?.id || null
+    }
+
+    // Handle thumbnail upload if File provided
+    let thumbnailUrl: string | null = null
+    try {
+      if (courseData.thumbnail && typeof courseData.thumbnail !== "string") {
+        const file = courseData.thumbnail
+        const filePath = `${userId}/${Date.now()}-${(file as File).name}`
+        const { error: uploadError } = await this.supabase.storage.from("course-thumbnails").upload(filePath, file as File)
+        if (!uploadError) {
+          const { data: publicData } = this.supabase.storage.from("course-thumbnails").getPublicUrl(filePath)
+          thumbnailUrl = publicData?.publicUrl || null
+        } else {
+          console.warn("Thumbnail upload failed:", uploadError.message)
+        }
+      } else if (typeof courseData.thumbnail === "string") {
+        thumbnailUrl = courseData.thumbnail
+      }
+    } catch (err) {
+      console.warn("Thumbnail upload error:", err)
+    }
 
     const { data, error } = await this.supabase
       .from("courses")
@@ -336,13 +398,17 @@ export class SupabaseService {
         instructor_id: userId,
         title: courseData.title,
         description: courseData.description,
-        category_id: category?.id,
+        category_id: categoryId,
         level: courseData.level,
         price: courseData.price,
-        thumbnail_url: courseData.thumbnail,
-        status: courseData.status,
+        thumbnail_url: thumbnailUrl,
+        status: courseData.status || "draft",
         total_lessons: courseData.totalLessons,
         tags: courseData.tags,
+        requirements: courseData.requirements,
+        what_you_learn: courseData.whatYouLearn,
+        language: courseData.language,
+        duration_hours: courseData.durationHours,
       })
       .select()
       .single()
@@ -354,7 +420,7 @@ export class SupabaseService {
       title: data.title,
       description: data.description,
       category: courseData.category,
-      level: data.level as "Beginner" | "Intermediate" | "Advanced",
+      level: data.level as "beginner" | "intermediate" | "advanced",
       price: Number.parseFloat(data.price?.toString() || "0"),
       thumbnail: data.thumbnail_url,
       status: data.status as "draft" | "published" | "archived",
